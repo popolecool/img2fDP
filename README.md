@@ -10,12 +10,6 @@ To use `img2fDP`, simply run the following command:
 img2fdp input_image.png output.fdp
 ```
 
-## Example
-
-Here is an example of an image converted to FDP format:
-
-![Output Image](output.fdp)
-
 ## Installation
 
 To install `img2fDP`, clone the repository and run the setup script:
