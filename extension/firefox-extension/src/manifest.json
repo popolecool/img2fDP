@@ -1,37 +1,31 @@
 {
   "manifest_version": 2,
-  "name": "Image Border Radius",
+  "name": "Border Radius Extension",
   "version": "1.0",
-  "description": "A Firefox extension that applies a border radius to all images on web pages.",
+  "description": "A Firefox extension to apply border radius to all images on web pages.",
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "storage",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
   ],
   "background": {
-    "scripts": [
-      "background.js"
-    ],
-    "persistent": false
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
   },
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content.js"
-      ],
-      "run_at": "document_end"
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
     }
-  ],
-  "icons": {
-    "48": "icons/icon48.png",
-    "96": "icons/icon96.png"
-  },
-  "browser_action": {
-    "default_icon": {
-      "48": "icons/icon48.png",
-      "96": "icons/icon96.png"
-    },
-    "default_title": "Image Border Radius"
-  }
+  ]
 }
