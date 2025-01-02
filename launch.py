@@ -11,17 +11,15 @@ def setup_venv():
         print("Création de l'environnement virtuel...")
         venv.create(venv_path, with_pip=True)
     
-    # Déterminer le chemin de l'exécutable pip
+    # Déterminer le chemin de l'exécutable python
     if sys.platform == "win32":
-        pip_path = os.path.join(venv_path, "Scripts", "pip")
         python_path = os.path.join(venv_path, "Scripts", "python")
     else:
-        pip_path = os.path.join(venv_path, "bin", "pip")
         python_path = os.path.join(venv_path, "bin", "python")
 
     # Installer les dépendances
     print("Installation des dépendances...")
-    subprocess.run([pip_path, "install", "-r", "requirements.txt"])
+    subprocess.run([python_path, "-m", "pip", "install", "-r", "requirements.txt"])
     
     # Lancer l'application
     print("Lancement de l'application...")

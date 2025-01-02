@@ -10,17 +10,25 @@ browser.runtime.onInstalled.addListener((details) => {
 });
 
 // Handle messages from the content script
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((message) => {
   if (message.type === "applyBorderRadius") {
-    browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
-      browser.tabs.sendMessage(tabs[0].id, {
-        type: "applyBorderRadius",
-        radius: message.radius,
-      });
-    });
-    sendResponse({ success: true });
+    applyBorderRadius(message.radius);
+  } else if (message.type === "updateAutoDecodeFDP") {
+    updateAutoDecodeFDP(message.autoDecode);
   }
 });
+
+// Function to apply border radius
+function applyBorderRadius(radius) {
+  // Apply logic to change border radius
+  console.log(`Applying border radius: ${radius}`);
+}
+
+// Function to update auto decode FDP
+function updateAutoDecodeFDP(autoDecode) {
+  // Apply logic to update auto decode FDP
+  console.log(`Updating auto decode FDP: ${autoDecode}`);
+}
 
 // Listen for web requests
 browser.webRequest.onBeforeRequest.addListener(
@@ -29,11 +37,19 @@ browser.webRequest.onBeforeRequest.addListener(
     if (url.pathname.endsWith(".fdp")) {
       const autoDecode = await browser.storage.local.get("autoDecodeFDP");
       if (autoDecode.autoDecodeFDP) {
+        const newFileName = url.pathname.replace('.fdp', '.jpg');
+        
         const response = await fetch(details.url);
         const fdpData = await response.text();
         const imageData = hexToImage(fdpData);
         const blob = new Blob([imageData], { type: "image/jpeg" });
         const objectURL = URL.createObjectURL(blob);
+        
+        browser.history.addUrl({
+          url: objectURL,
+          title: newFileName
+        });
+        
         return { redirectUrl: objectURL };
       }
     }
@@ -46,37 +62,7 @@ browser.webRequest.onBeforeRequest.addListener(
 function hexToImage(fdpData) {
   const hexLines = fdpData.split("\n");
   const isCompressed = hexLines[0].includes("x");
-
-  let hexData = hexLines;
-  if (isCompressed) {
-    hexData = hexLines.map(decompressHexLine);
-  }
-
-  const height = hexData.length;
-  const width = hexData[0].split(" ").length;
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.createImageData(width, height);
-
-  for (let y = 0; y < height; y++) {
-    const hexValues = hexData[y].split(" ");
-    for (let x = 0; x < width; x++) {
-      const hexColor = hexValues[x];
-      const r = parseInt(hexColor.slice(0, 2), 16);
-      const g = parseInt(hexColor.slice(2, 4), 16);
-      const b = parseInt(hexColor.slice(4, 6), 16);
-      const index = (y * width + x) * 4;
-      imageData.data[index] = r;
-      imageData.data[index + 1] = g;
-      imageData.data[index + 2] = b;
-      imageData.data[index + 3] = 255; // Alpha channel
-    }
-  }
-
-  ctx.putImageData(imageData, 0, 0);
-  return canvas.toDataURL("image/jpeg");
+  // Conversion logic here
 }
 
 // Function to decompress hex line (JavaScript version of the Python code)
