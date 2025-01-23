@@ -209,9 +209,8 @@ class MainWindow(QMainWindow):
         self.num_threads = 1
         
         # Créer le bouton de réglages
-        settings_button = QPushButton()
-        settings_button.setFixedSize(30, 30)
-        settings_button.setIcon(QIcon("settings.png"))  # Assurez-vous d'avoir une icône
+        settings_button = QPushButton("Paramètres")
+        settings_button.setIcon(QIcon("logo.png"))  # Icône optionnelle
         settings_button.clicked.connect(self.show_settings)
         
         # Ajouter le bouton en bas à droite
