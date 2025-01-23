@@ -1,5 +1,6 @@
 import sys
 import os
+import multiprocessing
 
 def check_venv():
     if not hasattr(sys, 'real_prefix') and not sys.base_prefix != sys.prefix:
@@ -10,20 +11,52 @@ def check_venv():
 check_venv()
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                           QLabel, QProgressBar, QPushButton, QFileDialog, QScrollArea, QCheckBox)
+                           QLabel, QProgressBar, QPushButton, QFileDialog, QScrollArea, QCheckBox,
+                           QSlider, QDialog)
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QPixmap, QImage
+from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QPixmap, QImage, QIcon
 import sys
 from fdp2img import image_to_hex, hex_to_image
 import os
 from PyQt6.QtGui import QPixmap
 from PIL import ImageQt
 
+class SettingsDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Réglages")
+        layout = QVBoxLayout(self)
+        
+        # Calculer le nombre maximum de threads disponibles
+        max_threads = multiprocessing.cpu_count() - 2
+        if max_threads < 1:
+            max_threads = 1
+            
+        # Label pour afficher le nombre de threads
+        self.thread_label = QLabel(f"Nombre de threads: {parent.num_threads}")
+        layout.addWidget(self.thread_label)
+        
+        # Slider pour ajuster le nombre de threads
+        self.thread_slider = QSlider(Qt.Orientation.Horizontal)
+        self.thread_slider.setMinimum(1)
+        self.thread_slider.setMaximum(max_threads)
+        self.thread_slider.setValue(parent.num_threads)
+        self.thread_slider.valueChanged.connect(self.update_thread_label)
+        layout.addWidget(self.thread_slider)
+        
+        # Bouton OK
+        ok_button = QPushButton("OK")
+        ok_button.clicked.connect(self.accept)
+        layout.addWidget(ok_button)
+
+    def update_thread_label(self, value):
+        self.thread_label.setText(f"Nombre de threads: {value}")
+
 class ConversionThread(QThread):
     progress = pyqtSignal(int)
     finished = pyqtSignal()
     
-    def __init__(self, input_path, output_path, is_fdp, compress=False, skip_single=False, bw=False):
+    def __init__(self, input_path, output_path, is_fdp, compress=False, skip_single=False, bw=False, num_threads=1):
         super().__init__()
         self.input_path = input_path
         self.output_path = output_path
@@ -31,10 +64,11 @@ class ConversionThread(QThread):
         self.compress = compress
         self.skip_single = skip_single
         self.bw = bw
+        self.num_threads = num_threads
 
     def run(self):
         if self.is_fdp:
-            hex_to_image(self.input_path, self.output_path)
+            hex_to_image(self.input_path, self.output_path, num_threads=self.num_threads)
         else:
             if self.bw:
                 from PIL import Image
@@ -46,7 +80,8 @@ class ConversionThread(QThread):
                 image_to_hex(
                     temp_path, 
                     self.output_path, 
-                    compress=self.compress
+                    compress=self.compress,
+                    num_threads=self.num_threads
                 )
                 
                 os.remove(temp_path)
@@ -54,9 +89,10 @@ class ConversionThread(QThread):
                 image_to_hex(
                     self.input_path, 
                     self.output_path, 
-                    compress=self.compress
+                    compress=self.compress,
+                    num_threads=self.num_threads
                 )
-            self.finished.emit()
+        self.finished.emit()
 
 class DropZone(QLabel):
     file_dropped = pyqtSignal(str)
@@ -77,6 +113,7 @@ class DropZone(QLabel):
                 padding: 30px;
                 background: #f0f0f0;
                 min-height: 100px;
+                color: #000000;
             }
         """)
         self.setAcceptDrops(True)
@@ -96,18 +133,37 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Convertisseur FDP universelle")
-        self.setMinimumSize(800, 600)  # Fenêtre plus grande
-        self.setAcceptDrops(True)  # Activer le drag and drop pour la fenêtre principale
-
+        self.setMinimumSize(800, 600)
+        
+        # Détecter le thème du système
+        style_hints = QApplication.instance().styleHints()
+        self.is_dark_mode = style_hints.colorScheme() == Qt.ColorScheme.Dark
+        self.setWindowIcon(QIcon("logo-d.png" if self.is_dark_mode else "logo-l.png"))
+        
+        # Créer tous les widgets
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        layout = QHBoxLayout(central_widget)  # Layout horizontal principal
+        layout = QHBoxLayout(central_widget)
 
-        # Panel gauche pour le drop et les contrôle"s
+        # Créer le panel gauche et ses widgets
         left_panel = QWidget()
         left_layout = QVBoxLayout(left_panel)
         layout.addWidget(left_panel)
 
+        # Créer la zone de prévisualisation avec scroll
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        layout.addWidget(scroll_area)
+        layout.setStretch(1, 2)
+
+        self.preview_label = QLabel()
+        self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        scroll_area.setWidget(self.preview_label)
+
+        # Maintenant que tous les widgets sont créés, on peut appliquer le thème
+        self.toggle_theme()
+
+        # Continuer avec le reste de l'initialisation
         # Zone de drop
         self.drop_zone = DropZone()
         self.drop_zone.file_dropped.connect(self.preview_file)
@@ -140,16 +196,6 @@ class MainWindow(QMainWindow):
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         left_layout.addWidget(self.status_label)
 
-        # Zone de prévisualisation avec scroll
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        layout.addWidget(scroll_area)
-        layout.setStretch(1, 2)  # Donne plus d'espace à la prévisualisation
-
-        self.preview_label = QLabel()
-        self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        scroll_area.setWidget(self.preview_label)
-
         # Variables pour le zoom
         self.zoom_factor = 1.0
         self.current_pixmap = None
@@ -158,6 +204,21 @@ class MainWindow(QMainWindow):
         # Ajout des attributs pour maintenir les références
         self.temp_pil_image = None
         self.temp_qt_image = None
+
+        # Ajouter le nombre de threads par défaut
+        self.num_threads = 1
+        
+        # Créer le bouton de réglages
+        settings_button = QPushButton()
+        settings_button.setFixedSize(30, 30)
+        settings_button.setIcon(QIcon("settings.png"))  # Assurez-vous d'avoir une icône
+        settings_button.clicked.connect(self.show_settings)
+        
+        # Ajouter le bouton en bas à droite
+        bottom_right_layout = QHBoxLayout()
+        bottom_right_layout.addStretch()
+        bottom_right_layout.addWidget(settings_button)
+        left_layout.addLayout(bottom_right_layout)
 
     def preview_file(self, file_path):
         self.current_file_path = file_path
@@ -278,7 +339,8 @@ class MainWindow(QMainWindow):
                 is_fdp,
                 compress=compress,
                 skip_single=skip_single,
-                bw=bw
+                bw=bw,
+                num_threads=self.num_threads
             )
             self.conversion_thread.finished.connect(self.conversion_finished)
             self.conversion_thread.start()
@@ -297,6 +359,39 @@ class MainWindow(QMainWindow):
         files = [u.toLocalFile() for u in event.mimeData().urls()]
         if files:
             self.preview_file(files[0])
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_M:
+            self.toggle_theme()
+
+    def toggle_theme(self):
+        if self.is_dark_mode:
+            self.setStyleSheet("")  # Réinitialiser au thème clair par défaut
+            self.is_dark_mode = False
+            self.setWindowIcon(QIcon("logo-l.png"))  # Logo pour le mode clair
+            self.preview_label.setStyleSheet("background-color: #ffffff;")  # Fond blanc pour le mode clair
+        else:
+            self.setStyleSheet("""
+                QMainWindow {
+                    background-color: #2e2e2e;
+                    color: #ffffff;
+                }
+                QLabel, QPushButton, QCheckBox {
+                    color: #ffffff;
+                }
+                QProgressBar {
+                    background-color: #3e3e3e;
+                    color: #ffffff;
+                }
+            """)
+            self.setWindowIcon(QIcon("logo-d.png"))  # Logo pour le mode sombre
+            self.preview_label.setStyleSheet("background-color: #1e1e1e;")  # Fond sombre pour le mode sombre
+            self.is_dark_mode = True
+
+    def show_settings(self):
+        dialog = SettingsDialog(self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self.num_threads = dialog.thread_slider.value()
 
 def main():
     app = QApplication(sys.argv)
