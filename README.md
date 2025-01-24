@@ -15,9 +15,10 @@ img2fdp input_image.png output.fdp
 To install `img2fDP`, clone the repository and run the setup script:
 
 ```sh
-git clone https://github.com/yourusername/img2fdp.git
+git clone https://github.com/popolecool/img2fdp.git
 cd img2fdp
-./setup.sh
+pip install -r requirements.txt
+python ./launch.py
 ```
 
 ## License
