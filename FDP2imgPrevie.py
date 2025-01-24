@@ -126,7 +126,7 @@ class DropZone(QLabel):
 class SecretDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("FDP")
+        self.setWindowTitle("😍😍😍")
         self.setFixedSize(400, 400)
         
         layout = QVBoxLayout(self)
@@ -187,7 +187,7 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(checkbox_container)
         
         # Boutons et barre de progression
-        self.convert_button = QPushButton("Convertir")
+        self.convert_button = QPushButton("Enregister l'image converti")
         self.convert_button.clicked.connect(self.start_conversion)
         self.convert_button.setEnabled(False)
         left_layout.addWidget(self.convert_button)
@@ -261,6 +261,9 @@ class MainWindow(QMainWindow):
         self.secret_timer = QTimer()
         self.secret_timer.setSingleShot(True)
         self.secret_timer.timeout.connect(self.reset_keys)
+
+        # Connecter le signal de drop_zone
+        self.drop_zone.file_dropped.connect(self.preview_file)
 
     def preview_file(self, file_path):
         self.current_file_path = file_path
@@ -395,7 +398,7 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 error_msg = (f"Erreur de conversion: {str(e)}\n"
                             "Si le problème persiste, veuillez ouvrir une issue sur\n"
-                            "https://github.com/votre-repo\n"
+                            "https://github.com/popolecool/img2fDP/issues\n"
                             "en incluant les détails de l'erreur ci-dessus.")
                 self.status_label.setText(error_msg)
 
