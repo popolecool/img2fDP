@@ -2,13 +2,6 @@ import sys
 import os
 import multiprocessing
 
-def check_venv():
-    if not hasattr(sys, 'real_prefix') and not sys.base_prefix != sys.prefix:
-        print("ERREUR: L'application doit être exécutée dans l'environnement virtuel.")
-        print("Veuillez utiliser 'python launch.py' pour démarrer l'application.")
-        sys.exit(1)
-
-check_venv()
 
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                            QLabel, QProgressBar, QPushButton, QFileDialog, QScrollArea, QCheckBox,
