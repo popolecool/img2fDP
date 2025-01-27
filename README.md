@@ -25,7 +25,9 @@ python ./launch.py
 
 This project is licensed under the MIT License.
 
+
+## meme
+
 https://lesjoiesducode.fr/quand-je-prsente-mes-collgues-un-framework-fun-mais-compltement-inutile
 https://lesjoiesducode.fr/quand-je-teste-un-bout-de-code-obscur-trouve-en-ligne
-https://lesjoiesducode.fr/stagiaire-chabrier-mep-foireuse
 https://lesjoiesducode.fr/stagiaire-chabrier-mep-foireuse
