@@ -1,4 +1,3 @@
 PyQt6
 Pillow
-tkinter
 # Ajoutez ici toutes les autres dépendances de votre projet 
