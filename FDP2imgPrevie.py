@@ -65,11 +65,9 @@ class ConversionThread(QThread):
         if self.is_fdp:
             hex_to_image(self.input_path, self.output_path)
         else:
-            # Créer un dictionnaire des arguments
+            # Pour l'instant, on n'utilise que le paramètre compress
             kwargs = {
-                'compress': self.compress,
-                'skip_single': self.skip_single,
-                'optimize': self.optimize,
+                'compress': self.compress
             }
             
             if self.bw:
@@ -164,7 +162,7 @@ class MainWindow(QMainWindow):
         
         # Zone de drop avec taille minimale
         self.drop_zone = DropZone()
-        self.drop_zone.setMinimumWidth(200)  # Largeur minimale
+        self.drop_zone.setMinimumWidth(150)  # Largeur minimale
         left_layout.addWidget(self.drop_zone)
         
         # Conteneur pour les checkboxes
