@@ -50,7 +50,7 @@ class ConversionThread(QThread):
     progress = pyqtSignal(int)
     finished = pyqtSignal()
     
-    def __init__(self, input_path, output_path, is_fdp, compress=False, skip_single=False, bw=False, num_threads=1):
+    def __init__(self, input_path, output_path, is_fdp, compress=False, skip_single=False, bw=False, optimize=False, num_threads=1):
         super().__init__()
         self.input_path = input_path
         self.output_path = output_path
@@ -58,12 +58,20 @@ class ConversionThread(QThread):
         self.compress = compress
         self.skip_single = skip_single
         self.bw = bw
+        self.optimize = optimize
         self.num_threads = num_threads
 
     def run(self):
         if self.is_fdp:
-            hex_to_image(self.input_path, self.output_path, num_threads=self.num_threads)
+            hex_to_image(self.input_path, self.output_path)
         else:
+            # Créer un dictionnaire des arguments
+            kwargs = {
+                'compress': self.compress,
+                'skip_single': self.skip_single,
+                'optimize': self.optimize,
+            }
+            
             if self.bw:
                 from PIL import Image
                 img = Image.open(self.input_path)
@@ -71,21 +79,10 @@ class ConversionThread(QThread):
                 temp_path = self.input_path + '_temp.png'
                 img.save(temp_path)
                 
-                image_to_hex(
-                    temp_path, 
-                    self.output_path, 
-                    compress=self.compress,
-                    num_threads=self.num_threads
-                )
-                
+                image_to_hex(temp_path, self.output_path, **kwargs)
                 os.remove(temp_path)
             else:
-                image_to_hex(
-                    self.input_path, 
-                    self.output_path, 
-                    compress=self.compress,
-                    num_threads=self.num_threads
-                )
+                image_to_hex(self.input_path, self.output_path, **kwargs)
         self.finished.emit()
 
 class DropZone(QLabel):
@@ -181,9 +178,17 @@ class MainWindow(QMainWindow):
         self.bw_checkbox = QCheckBox("Noir et blanc")
         self.bw_checkbox.stateChanged.connect(self.update_preview_bw)
         
+        # Ajouter le nouveau checkbox pour la compression optimisée
+        self.optimize_checkbox = QCheckBox("Compression optimisée (plus lent)")
         checkbox_layout.addWidget(self.compress_checkbox)
         checkbox_layout.addWidget(self.skip_single_checkbox)
         checkbox_layout.addWidget(self.bw_checkbox)
+        checkbox_layout.addWidget(self.optimize_checkbox)
+        
+        # Mettre à jour la connexion des checkboxes
+        self.compress_checkbox.stateChanged.connect(self.update_checkbox_states)
+        self.optimize_checkbox.stateChanged.connect(self.update_checkbox_states)
+        
         left_layout.addWidget(checkbox_container)
         
         # Boutons et barre de progression
@@ -380,6 +385,7 @@ class MainWindow(QMainWindow):
             self.status_label.setText("Conversion en cours...")
             
             compress = self.compress_checkbox.isChecked()
+            optimize = self.optimize_checkbox.isChecked()
             skip_single = self.skip_single_checkbox.isChecked()
             bw = self.bw_checkbox.isChecked()
             
@@ -390,6 +396,7 @@ class MainWindow(QMainWindow):
                 compress=compress,
                 skip_single=skip_single,
                 bw=bw,
+                optimize=optimize,
                 num_threads=self.num_threads
             )
             self.conversion_thread.finished.connect(self.conversion_finished)
@@ -611,6 +618,14 @@ class MainWindow(QMainWindow):
         # Dessiner l'image
         painter.drawPixmap(target_rect, self.current_pixmap, source_rect)
         painter.end()
+
+    def update_checkbox_states(self):
+        # Désactiver la compression optimisée si la compression normale n'est pas cochée
+        if not self.compress_checkbox.isChecked():
+            self.optimize_checkbox.setChecked(False)
+            self.optimize_checkbox.setEnabled(False)
+        else:
+            self.optimize_checkbox.setEnabled(True)
 
 def main():
     app = QApplication(sys.argv)
