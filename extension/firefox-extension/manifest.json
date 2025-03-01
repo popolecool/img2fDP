@@ -1,9 +1,0 @@
-{
-  "permissions": [
-    "<all_urls>",
-    "webRequest",
-    "webRequestBlocking",
-    "history",
-    "storage"
-  ]
-} 

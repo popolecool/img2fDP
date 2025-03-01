@@ -10,7 +10,6 @@ from PyQt6.QtCore import Qt, QThread, pyqtSignal, QRectF, QTimer
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QPixmap, QImage, QIcon, QPainter
 import sys
 from fdp2img import image_to_hex, hex_to_image
-import os
 from PyQt6.QtGui import QPixmap
 from PIL import ImageQt
 from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
@@ -24,7 +23,7 @@ class SettingsDialog(QDialog):
         # Calculer le nombre maximum de threads disponibles
         max_threads = multiprocessing.cpu_count() - 2
         if max_threads < 1:
-            max_threads = 1
+            max_threads = 2
             
         # Label pour afficher le nombre de threads
         self.thread_label = QLabel(f"Nombre de threads: {parent.num_threads}")
@@ -450,7 +449,8 @@ class MainWindow(QMainWindow):
 
     def toggle_theme(self):
         if self.is_dark_mode:
-            # Mode clair avec tons violets
+# que du CSC pour le dark mode est le mode clair
+# Mode clair avec tons violets
             self.setStyleSheet("""
                 QMainWindow, QDialog {
                     background-color: #F8F7FD;
