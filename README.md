@@ -7,7 +7,7 @@
 To use `img2fDP`, simply run the following command:
 
 ```sh
-img2fdp input_image.png output.fdp
+img2fdp -i input_image.png
 ```
 
 ## Installation
