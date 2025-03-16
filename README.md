@@ -18,16 +18,9 @@ To install `img2fDP`, clone the repository and run the setup script:
 git clone https://github.com/popolecool/img2fdp.git
 cd img2fdp
 pip install -r requirements.txt
-python ./launch.py
+python ./FDP2imgPrevie.py
 ```
 
 ## License
 
 This project is licensed under the MIT License.
-
-
-## meme
-
-https://lesjoiesducode.fr/quand-je-prsente-mes-collgues-un-framework-fun-mais-compltement-inutile
-https://lesjoiesducode.fr/quand-je-teste-un-bout-de-code-obscur-trouve-en-ligne
-https://lesjoiesducode.fr/stagiaire-chabrier-mep-foireuse

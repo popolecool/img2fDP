@@ -24,7 +24,7 @@ def decompress_hex_line(compressed_line):
         else:
             decompressed.append(token)
     return decompressed
-
+ #ficher avec l'option W pour ecrire
 def image_to_hex(image_path, output_file, compress=False):
     img = Image.open(image_path)
     img = img.convert("RGB")
@@ -68,9 +68,9 @@ def hex_to_image(input_file, output_file=None, return_image=False):
         hex_values = hex_data[y].strip().split()
         for x in range(width):
             hex_color = hex_values[x]
-            r = int(hex_color[0:2], 16) # prélèvement de la valeur hexadécimale de la couleur R
-            g = int(hex_color[2:4], 16) # prélèvement de la valeur hexadécimale de la couleur G
-            b = int(hex_color[4:6], 16) # prélèvement de la valeur hexadécimale de la couleur B
+            r = int(hex_color[0:2], 16) # la valeur hexadécimale de R
+            g = int(hex_color[2:4], 16) # la valeur hexadécimale de G
+            b = int(hex_color[4:6], 16) # la valeur hexadécimale de B
             pixels[x, y] = (r, g, b)
 
     if return_image:
@@ -82,7 +82,7 @@ def hex_to_image(input_file, output_file=None, return_image=False):
 
 def main():
     parser = argparse.ArgumentParser(description='Convertir entre image et format FDP (Fichier Déjà Parfait)')
-    parser.add_argument('-i', '--input', required=True, help='Chemin du fichier d\'entrée')
+    parser.add_argument('-i', '--input', required=True, help="Chemin du fichier d'entrée")
     parser.add_argument('-c', '--compress', action='store_true', help='Activer la compression RLE')
     args = parser.parse_args()
 
