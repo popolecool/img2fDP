@@ -16,7 +16,7 @@ def compress_hex_line(hex_line):
 
 def decompress_hex_line(compressed_line):
     decompressed = []
-    tokens = compressed_line.strip().split("")
+    tokens = compressed_line.strip().split(" ")
     for token in tokens:
         if "x" in token:
             count, value = token.split("x")
@@ -24,7 +24,7 @@ def decompress_hex_line(compressed_line):
         else:
             decompressed.append(token)
     return decompressed
- #ficher avec l'option W pour ecrire
+
 def image_to_hex(image_path, output_file, compress=False):
     img = Image.open(image_path)
     img = img.convert("RGB")
